@@ -136,3 +136,38 @@ module.exports = {
   orderValidation,
   reviewValidation,
 };
+
+// Email format validation
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return { valid: false, message: 'Invalid email format' };
+  }
+  return { valid: true };
+};
+
+// Enhanced password validation with strength check
+const validatePassword = (password) => {
+  if (!password || password.length < 8) {
+    return { valid: false, message: 'Password must be at least 8 characters' };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, message: 'Password must contain uppercase letter' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, message: 'Password must contain a number' };
+  }
+  return { valid: true };
+};
+
+// Phone number validation for Pakistan
+const validatePhone = (phone) => {
+  const phoneRegex = /^(\+92|0)?[0-9]{10}$/;
+  return phoneRegex.test(phone);
+};
+
+module.exports = {
+  validateEmail,
+  validatePassword,
+  validatePhone
+};
