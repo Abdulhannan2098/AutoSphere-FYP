@@ -30,3 +30,40 @@ const errorHandler = (err, req, res, next) => {
 };
 
 module.exports = errorHandler;
+
+// ============================================================================
+// Enhanced Error Handling and Logging 
+// ============================================================================
+
+const logError = (error, req) => {
+  const errorLog = {
+    timestamp: new Date().toISOString(),
+    message: error.message,
+    stack: error.stack,
+    path: req.path,
+    method: req.method,
+    ip: req.ip
+  };
+  
+  console.error('=== ERROR LOGGED ===');
+  console.error(JSON.stringify(errorLog, null, 2));
+  
+  return errorLog;
+};
+
+const formatErrorResponse = (error) => {
+  return {
+    success: false,
+    message: error.message || 'Something went wrong',
+    timestamp: new Date().toISOString()
+  };
+};
+
+const handleError = (err, req, res, next) => {
+  logError(err, req);
+  const statusCode = err.statusCode || 500;
+  const response = formatErrorResponse(err);
+  res.status(statusCode).json(response);
+};
+
+module.exports = { logError, formatErrorResponse, handleError };
