@@ -1,4 +1,13 @@
 const mongoose = require('mongoose');
+// ============================================================================
+// Database Indexes for Performance 
+// ============================================================================
+productSchema.index({ category: 1, price: 1 });
+productSchema.index({ vendor: 1, createdAt: -1 });
+productSchema.index({ name: 'text', description: 'text' });
+productSchema.index({ status: 1, inStock: 1 });
+productSchema.index({ createdAt: -1, _id: 1 });
+productSchema.index({ has3DModel: 1, category: 1 });
 
 const productSchema = new mongoose.Schema(
   {
