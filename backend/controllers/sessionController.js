@@ -205,3 +205,39 @@ exports.trustSession = async (req, res, next) => {
     next(error);
   }
 };
+
+// ============================================================================
+// Session Timeout Fix - Jan 1, 2026
+// ============================================================================
+
+// Fix for session expiry calculation
+const calculateSessionExpiry = (loginTime) => {
+  const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
+  return new Date(loginTime.getTime() + sessionDuration);
+};
+
+// Middleware to check session validity
+const checkSessionValidity = async (req, res, next) => {
+  try {
+    const session = await Session.findById(req.sessionId);
+    
+    if (!session) {
+      return res.status(401).json({
+        success: false,
+        message: 'Session not found'
+      });
+    }
+    
+    if (new Date() > session.expiresAt) {
+      await Session.findByIdAndDelete(req.sessionId);
+      return res.status(401).json({
+        success: false,
+        message: 'Session expired'
+      });
+    }
+    
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
