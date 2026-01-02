@@ -68,3 +68,51 @@ module.exports = {
   emailLimiter,
   orderLimiter,
 };
+
+// ============================================================================
+// Response Time Optimization - Jan 2, 2026
+// ============================================================================
+
+// Middleware to log response times
+const responseTimeLogger = (req, res, next) => {
+  const start = Date.now();
+  
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    
+    if (duration > 1000) {
+      console.warn(`Slow API: ${req.method} ${req.path} took ${duration}ms`);
+    }
+  });
+  
+  next();
+};
+
+// Cache middleware for GET requests
+const cacheMiddleware = (duration = 300) => {
+  const cache = new Map();
+  
+  return (req, res, next) => {
+    if (req.method !== 'GET') return next();
+    
+    const key = req.originalUrl;
+    const cached = cache.get(key);
+    
+    if (cached && Date.now() - cached.timestamp < duration * 1000) {
+      return res.json(cached.data);
+    }
+    
+    res.originalJson = res.json;
+    res.json = (data) => {
+      cache.set(key, { data, timestamp: Date.now() });
+      res.originalJson(data);
+    };
+    
+    next();
+  };
+};
+
+module.exports = {
+  responseTimeLogger,
+  cacheMiddleware
+};
