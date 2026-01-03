@@ -83,3 +83,63 @@ const protect = async (req, res, next) => {
 };
 
 module.exports = { protect };
+
+// ============================================================================
+// Final Security Enhancements - Jan 3, 2026
+// ============================================================================
+
+// Sanitize user input to prevent XSS
+const sanitizeInput = (input) => {
+  if (typeof input !== 'string') return input;
+  return input
+    .replace(/[<>]/g, '')
+    .trim();
+};
+
+// Check for suspicious patterns
+const detectSuspiciousActivity = (req) => {
+  const suspiciousPatterns = [
+    /<script>/i,
+    /javascript:/i,
+    /on\w+=/i,
+    /\.\.\//,
+    /union.*select/i
+  ];
+  
+  const checkString = JSON.stringify(req.body) + req.url;
+  
+  return suspiciousPatterns.some(pattern => pattern.test(checkString));
+};
+
+// Enhanced auth check with security logging
+const secureAuthCheck = async (req, res, next) => {
+  try {
+    // Check for suspicious activity
+    if (detectSuspiciousActivity(req)) {
+      console.warn('Suspicious activity detected:', {
+        ip: req.ip,
+        url: req.url,
+        timestamp: new Date()
+      });
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden request'
+      });
+    }
+    
+    // Sanitize all body inputs
+    if (req.body) {
+      Object.keys(req.body).forEach(key => {
+        if (typeof req.body[key] === 'string') {
+          req.body[key] = sanitizeInput(req.body[key]);
+        }
+      });
+    }
+    
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { secureAuthCheck, sanitizeInput };
